@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: unique-export
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+        group: DEFAULT_GROUP
+        namespace: public
+      config:
+        import-check:
+          enabled: false
+        server-addr: 127.0.0.1:8848
+        namespace: public
+        group: DEFAULT_GROUP
+        refresh-enabled: true
+        file-extension: yaml
+  #        新一代配置
+  config:
+    import:
+      - nacos:shared-config.yaml
+      - nacos:extension-config.yaml
+  data:
+    redis:
+      url: redis://127.0.0.1:6379
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  mapper-locations: classpath*:/mapper/**/*.xml

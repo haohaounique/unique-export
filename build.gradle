@@ -1,0 +1,92 @@
+buildscript {
+    // 仓库地址
+    repositories {
+        // 本地仓库
+        mavenLocal()
+        // 阿里云仓库
+        maven { url "https://maven.aliyun.com/repository/public/" }
+        // 中央仓库
+        mavenCentral()
+    }
+
+    // 依赖版本
+    ext {
+        set('springCloudAlibabaVersion', "2023.0.3.2")
+        set('springCloudVersion', "2024.0.0")
+        set('springBootVersion', "3.4.2")
+    }
+
+    // 依赖
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}" as Object)
+    }
+}
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version "${springBootVersion}"
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+//apply plugin: 'io.spring.dependency-management'
+
+group = project.groupId
+artifactId = project.artifactId
+version = project.version
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+}
+
+compileJava {
+    options.compilerArgs << "-Amapstruct.unmappedTargetPolicy=IGNORE"
+}
+
+repositories {
+    mavenLocal()
+
+    // 阿里云仓库
+    maven { url "https://maven.aliyun.com/repository/public/" }
+    // 中央仓库
+    mavenCentral()
+    // gradle 插件
+    //maven { url "https://plugins.gradle.org/m2/" }
+    maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
+    // 私服
+    maven {
+        url "http://localhost:8081/repository/maven-central/"
+        credentials {
+            allowInsecureProtocol true
+            username "admin"
+            password "hadoop"
+        }
+    }
+
+}
+dependencies {
+    implementation "com.unique.framework:unique-framework-all:${frameworkVersion}"
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    implementation 'org.mapstruct:mapstruct'
+    annotationProcessor 'org.mapstruct:mapstruct-processor'
+
+    implementation 'org.springframework.boot:spring-boot-starter-actuator:3.4.2'
+    implementation 'io.micrometer:micrometer-registry-prometheus:1.14.4'
+    implementation 'io.micrometer:micrometer-core:1.14.4'
+
+    implementation 'com.baomidou:mybatis-plus-generator:3.5.10.1'
+    implementation 'org.freemarker:freemarker:2.3.34'
+//    implementation 'com.baomidou:mybatis-plus-spring-boot3-starter:3.5.10.1'
+    implementation 'com.github.ben-manes.caffeine:caffeine:3.2.0'
+    implementation("com.alibaba:easyexcel:4.0.3")
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "com.unique.framework:unique-framework-dependencies:${frameworkVersion}"
+    }
+}
+
+
+//bootJar {
+//    exclude("/**/*.yml")
+//    exclude("/**/*.properties")
+//}
