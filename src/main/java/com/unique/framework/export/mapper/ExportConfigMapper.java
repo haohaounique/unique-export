@@ -1,7 +1,8 @@
 package com.unique.framework.export.mapper;
 
-import com.unique.framework.export.entity.ExportConfig;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.unique.framework.export.entity.ExportConfig;
+import org.apache.ibatis.annotations.Mapper;
 
 
 /**
@@ -12,7 +13,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  * @author haohaounique@163.com
  * @since 2025-03-26 21:32:57
  */
-@M
+@Mapper
 public interface ExportConfigMapper extends BaseMapper<ExportConfig> {
 
 }
