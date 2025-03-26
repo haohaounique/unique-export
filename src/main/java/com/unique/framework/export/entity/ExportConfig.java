@@ -8,17 +8,17 @@ import lombok.Setter;
 import lombok.ToString;
 /**
  * <p>
- * excel模板配置
+ * 导出模板配置
  * </p>
  *
  * @author haohaounique@163.com
- * @since 2025-03-25 23:19:06
+ * @since 2025-03-26 21:32:57
  */
 @Getter
 @Setter
 @ToString
-@TableName("excel_template")
-public class ExcelTemplate implements Serializable {
+@TableName("export_config")
+public class ExportConfig implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -43,14 +43,19 @@ public class ExcelTemplate implements Serializable {
     private String templateType;
 
     /**
-     * 导出导入数量限制
+     * 导出数量限制
      */
     private Integer maxSize;
 
     /**
+     * 最大任务数
+     */
+    private Integer maxTaskNum;
+
+    /**
      * 请求地址
      */
-    private String reqUrl;
+    private String pageUrl;
 
     /**
      * 表头

@@ -1,4 +1,4 @@
-package com.unique.rule.check.common.util;
+package com.unique.framework.export.common;
 
 
 
@@ -19,11 +19,11 @@ public class CodeUtils {
 
     public static void main(String[] args) {
         ArrayList<String> strings = new ArrayList<>();
-        strings.add("rule_expression");
-        strings.add("rule_config");
-        strings.add("rule_tip");
+
+        strings.add("export_config");
+        strings.add("export_task");
         for (String tableName : strings) {
-            genecode(tableName, "com.unique.rule.check");
+            genecode(tableName, "com.unique.framework.export");
         }
     }
 
@@ -36,7 +36,7 @@ public class CodeUtils {
 //                            .fileOverride() // 覆盖已生成文件 已过时到strategyConfig 中去配置
                             .dateType(DateType.TIME_PACK)
                             .commentDate("yyyy-MM-dd HH:mm:ss")
-                            .outputDir("D:\\code\\rule_check\\src\\main\\java"); // 指定输出目录
+                            .outputDir("D:\\code\\unique-export\\src\\main\\java"); // 指定输出目录
                 }).dataSourceConfig(builder -> {
                     builder.typeConvertHandler((globalConfig, typeRegistry, metaInfo) -> {
                         if (JdbcType.BIT==metaInfo.getJdbcType()) {
@@ -54,7 +54,7 @@ public class CodeUtils {
                 })
                 .packageConfig(builder -> {
                     builder.parent(filePath) // 设置父包名
-                            .pathInfo(Collections.singletonMap(OutputFile.xml, "D:\\code\\rule_check\\src\\main\\resources\\mapper")); // 设置mapperXml生成路径
+                            .pathInfo(Collections.singletonMap(OutputFile.xml, "D:\\code\\unique-export\\src\\main\\resources\\mapper")); // 设置mapperXml生成路径
                 })
                 .strategyConfig(builder -> {
                     builder.addInclude(tableName).entityBuilder()

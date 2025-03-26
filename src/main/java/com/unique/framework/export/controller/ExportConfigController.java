@@ -3,10 +3,9 @@ package com.unique.framework.export.controller;
 import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.unique.framework.common.http.http.RespBody;
-import com.unique.framework.export.entity.ExcelTemplate;
-import com.unique.framework.export.service.IExcelTemplateService;
+import com.unique.framework.export.entity.ExportConfig;
+import com.unique.framework.export.service.IExportConfigService;
 import jakarta.annotation.Resource;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -18,32 +17,34 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 /**
- * date:2025/3/25 21:57
- * author: haohaounique@163.com
+ * <p>
+ * 导出模板配置 前端控制器
+ * </p>
+ *
+ * @author haohaounique@163.com
+ * @since 2025-03-26 21:32:57
  */
 @RestController
-@RequestMapping(value = "/excel/upload")
-@Slf4j
-public class ExcelUploadController {
-
+@RequestMapping("/exportConfig")
+public class ExportConfigController {
     @Resource
-    private IExcelTemplateService excelTemplateService;
+    private IExportConfigService exportConfigService;
 
     @PostMapping(value = "/template")
     public RespBody<Object> template(@RequestParam("file") MultipartFile file) throws IOException {
         String originalFilename = file.getOriginalFilename(); //模板名称
+        //读取标题和字段
         List<LinkedHashMap<Integer, String>> objects = EasyExcel.read(file.getInputStream()).sheet().headRowNumber(0).doReadSync();
-
         List<String> headerField = objects.get(0).values().stream().toList();
         List<String> valueField = objects.get(1).values().stream().toList();
-        ExcelTemplate excelTemplate = new ExcelTemplate();
-        excelTemplate.setId(IdWorker.getId());
-        excelTemplate.setTemplateCode("unique_export_order");
-        excelTemplate.setFieldHeader(headerField.toString());
-        excelTemplate.setFieldName(valueField.toString());
-        excelTemplate.setTemplateName(originalFilename);
-        excelTemplate.setReqUrl("");
-        excelTemplateService.save(excelTemplate);
+        ExportConfig exportConfig = new ExportConfig();
+        exportConfig.setId(IdWorker.getId());
+        exportConfig.setTemplateCode("unique_export_order");
+        exportConfig.setFieldHeader(headerField.toString());
+        exportConfig.setFieldName(valueField.toString());
+        exportConfig.setTemplateName(originalFilename);
+        exportConfig.setPageUrl("");
+        exportConfigService.save(exportConfig);
         return new RespBody<>(objects);
     }
 }
