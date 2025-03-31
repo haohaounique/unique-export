@@ -1,6 +1,7 @@
 package com.unique.framework.export.controller;
 
 import com.alibaba.excel.EasyExcel;
+import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.unique.framework.common.http.http.RespBody;
 import com.unique.framework.export.entity.ExportConfig;
@@ -40,8 +41,8 @@ public class ExportConfigController {
         ExportConfig exportConfig = new ExportConfig();
         exportConfig.setId(IdWorker.getId());
         exportConfig.setTemplateCode("unique_export_order");
-        exportConfig.setFieldHeader(headerField.toString());
-        exportConfig.setFieldName(valueField.toString());
+        exportConfig.setFieldHeader(JSON.toJSONString(headerField));
+        exportConfig.setFieldName(JSON.toJSONString(valueField));
         exportConfig.setTemplateName(originalFilename);
         exportConfig.setPageUrl("");
         exportConfigService.save(exportConfig);
