@@ -15,6 +15,8 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
+import com.unique.framework.common.http.exception.GlobalErrorCode;
+import com.unique.framework.common.http.exception.GlobalException;
 import com.unique.framework.common.http.http.PageQuery;
 import com.unique.framework.common.http.http.PageResult;
 import com.unique.framework.common.http.http.ReqBody;
@@ -33,11 +35,15 @@ import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -124,44 +130,65 @@ public class ExcelExportService {
             return;
         }
 
-        PageQuery<String> pageQuery = new PageQuery<>();
-        pageQuery.setParam(exportTask.getPageParam());
-        pageQuery.setSize(exportTask.getPageSize().longValue());
-        ReqBody<PageQuery<String>> reqBody = ReqBody.getReqBody(pageQuery);
-        RequestEntity<ReqBody> body = RequestEntity.post(new URI(exportTask.getPageUrl())).contentType(MediaType.APPLICATION_JSON).header("Authorization", exportTask.getAuthorizationHeader()).body(reqBody);
-        ResponseEntity<RespBody> exchange = restTemplate.exchange(body, RespBody.class);
-        PageResult pageResult = JSON.parseObject(JSON.toJSONString(exchange.getBody().getResult()), PageResult.class);
-        log.info("result:{}", JSON.toJSONString(pageResult));
+        try {
+            PageQuery<String> pageQuery = new PageQuery<>();
+            pageQuery.setParam(exportTask.getPageParam());
+            pageQuery.setSize(exportTask.getPageSize().longValue());
+            ReqBody<PageQuery<String>> reqBody = ReqBody.getReqBody(pageQuery);
+            RequestEntity<ReqBody> body = RequestEntity.post(new URI(exportTask.getPageUrl())).contentType(MediaType.APPLICATION_JSON).header("Authorization", exportTask.getAuthorizationHeader()).body(reqBody);
+            ResponseEntity<RespBody> exchange = restTemplate.exchange(body, RespBody.class);
+            PageResult pageResult = JSON.parseObject(JSON.toJSONString(exchange.getBody().getResult()), PageResult.class);
+            log.info("result:{}", JSON.toJSONString(pageResult));
 
-        List<String> feildList = OBJECT_MAPPER.readValue(exportConfig.getFieldName(), new TypeReference<>() {
-        });
+            List<String> feildList = OBJECT_MAPPER.readValue(exportConfig.getFieldName(), new TypeReference<>() {
+            });
+            List<String> feildHeaderList = OBJECT_MAPPER.readValue(exportConfig.getFieldHeader(), new TypeReference<>() {
+            });
 
-        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        ) {
+            try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            ) {
+                ExportSheetWriterHandler exportSheetWriterHandler = new ExportSheetWriterHandler(0, 2);
+                ExcelWriterBuilder writeBuilder = EasyExcelFactory.write(byteArrayOutputStream)
+                        .autoCloseStream(true)
 
-            ExcelWriterBuilder writeBuilder = EasyExcelFactory.write(byteArrayOutputStream)
-                    .autoCloseStream(true)
-                    .registerWriteHandler(new ExportSheetWriterHandler(2, 2));
-            //write template
-            writeBuilder.withTemplate(inputStream);
-            // create sheet
-            ExcelWriter excelWriter = writeBuilder.build();
-            WriteSheet sheet = new ExcelWriterSheetBuilder(excelWriter).build();
-            //fill data
-            excelWriter.write(new ArrayList<>(), sheet);
-            List<List<String>> dataList = OBJECT_MAPPER.convertValue(pageResult.getRecords(), new TypeReference<List<Map<String, Object>>>() {
-                    }).stream()
-                    .map(data -> feildList.stream().map(field -> obtainValue(data, field)).collect(Collectors.toList()))
-                    .collect(Collectors.toList());
-            if (CollUtil.isNotEmpty(dataList)) {
+                        .registerWriteHandler(exportSheetWriterHandler);
+                //write template
+                writeBuilder.withTemplate(inputStream);
+                // create sheet
+                ExcelWriter excelWriter = writeBuilder.build();
+                WriteSheet sheet = new ExcelWriterSheetBuilder(excelWriter).build();
+                //fill data 或者是直接填充标题头
+                List<List<String>> firstRow = new ArrayList<>();
+                firstRow.add(feildHeaderList);
+                excelWriter.write(firstRow, sheet);
+                List<List<String>> dataList = OBJECT_MAPPER.convertValue(pageResult.getRecords(), new TypeReference<List<Map<String, Object>>>() {
+                        }).stream()
+                        .map(data -> feildList.stream().map(field -> obtainValue(data, field)).collect(Collectors.toList()))
+                        .collect(Collectors.toList());
+                if (CollUtil.isNotEmpty(dataList)) {
+                    excelWriter.write(dataList, sheet);
+                }
+
                 excelWriter.write(dataList, sheet);
+
+                excelWriter.finish();
+
+                //upload to oss
+
+                byte[] byteArray = byteArrayOutputStream.toByteArray();
+                response.setHeader("Content-Disposition", "attachment; filename=" + URLEncoder.encode("测试.xlsx", "UTF-8"));
+                response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+                response.setContentLength(byteArray.length);
+                response.getOutputStream().write(byteArray);
+
             }
-
-            excelWriter.write(dataList, sheet);
-
-            excelWriter.finish();
-
-            //upload to oss
+        } catch (GlobalException e) {
+            throw new GlobalException(GlobalErrorCode.PARAMETER_EXCEPTION, "export task failed", e);
+        } catch (Exception e) {
+            throw new GlobalException(GlobalErrorCode.PARAMETER_EXCEPTION, "导出失败");
+        } finally {
+            LockUtils.unlock(templateLock);
+            LockUtils.unlock(lock);
         }
 
     }

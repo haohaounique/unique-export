@@ -25,7 +25,11 @@ public class ExportSheetWriterHandler extends AbstractSheetWriteHandler {
     @Override
     public void afterSheetCreate(WriteWorkbookHolder writeWorkbookHolder, WriteSheetHolder writeSheetHolder) {
 
-        if (headNum == null || headNum < 1) {
+//        if (headNum == null || headNum < 1) {
+//            return;
+//        }
+        if (headNum == null) {
+            headNum = 0;
             return;
         }
 
@@ -40,10 +44,11 @@ public class ExportSheetWriterHandler extends AbstractSheetWriteHandler {
 
         // 删除headRow之后的行
         int lastRowIndex = sheet.getLastRowNum();
-        if (lastRowIndex + 1 <= headNum) {
-            // 没有需要处理的行
-            return;
-        }
+        //从header开始删除
+//        if (lastRowIndex + 1 <= headNum) {
+//            // 没有需要处理的行
+//            return;
+//        }
         for (int i = headNum; i <= lastRowIndex; i++) {
             removeRow(sheet, i);
         }
