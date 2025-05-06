@@ -35,15 +35,11 @@ import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URLEncoder;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -150,8 +146,10 @@ public class ExcelExportService {
                 ExportSheetWriterHandler exportSheetWriterHandler = new ExportSheetWriterHandler(0, 2);
                 ExcelWriterBuilder writeBuilder = EasyExcelFactory.write(byteArrayOutputStream)
                         .autoCloseStream(true)
-
                         .registerWriteHandler(exportSheetWriterHandler);
+                //string样式的
+                writeBuilder.registerWriteHandler(new StringCellStyleWriteHandler());
+
                 //write template
                 writeBuilder.withTemplate(inputStream);
                 // create sheet
